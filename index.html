@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aviator Demo</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(160deg, #17104a, #5b2a91);
+      color: white;
+      text-align: center;
+      min-height: 100vh;
+    }
+
+    .header {
+      padding: 25px 15px 10px;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .balance {
+      background: rgba(255,255,255,0.12);
+      margin: 15px;
+      padding: 15px;
+      border-radius: 15px;
+      font-size: 20px;
+    }
+
+    .game {
+      margin: 20px 15px;
+      padding: 35px 15px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 20px;
+    }
+
+    #multiplier {
+      font-size: 55px;
+      font-weight: bold;
+      margin: 30px 0;
+    }
+
+    #plane {
+      font-size: 70px;
+      transition: transform 0.3s;
+    }
+
+    button {
+      border: 0;
+      border-radius: 12px;
+      padding: 16px 35px;
+      margin: 8px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    #bet {
+      background: #24b85a;
+      color: white;
+    }
+
+    #cashout {
+      background: #e54848;
+      color: white;
+    }
+
+    #cashout:disabled {
+      opacity: 0.5;
+    }
+
+    .history {
+      margin: 20px 15px;
+      padding: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">✈️ AVIATOR DEMO</div>
+
+  <div class="balance">
+    Virtual Balance: $<span id="balance">1000.00</span>
+  </div>
+
+  <div class="game">
+    <div id="plane">✈️</div>
+    <div id="multiplier">1.00x</div>
+
+    <button id="bet">BET $10</button>
+    <button id="cashout" disabled>CASH OUT</button>
+
+    <p id="message">Place a virtual bet to start.</p>
+  </div>
+
+  <div class="history">
+    <h3>Round History</h3>
+    <div id="history">No rounds yet</div>
+  </div>
+
+<script>
+let balance = 1000;
+let bet = 10;
+let multiplier = 1;
+let running = false;
+let crashed = false;
+let timer;
+
+const balanceEl = document.getElementById("balance");
+const multiplierEl = document.getElementById("multiplier");
+const planeEl = document.getElementById("plane");
+const messageEl = document.getElementById("message");
+const cashoutBtn = document.getElementById("cashout");
+const historyEl = document.getElementById("history");
+
+function updateBalance() {
+  balanceEl.textContent = balance.toFixed(2);
+}
+
+document.getElementById("bet").onclick = function() {
+  if (running) return;
+
+  if (balance < bet) {
+    messageEl.textContent = "Not enough virtual balance.";
+    return;
+  }
+
+  balance -= bet;
+  updateBalance();
+
+  multiplier = 1;
+  running = true;
+  crashed = false;
+
+  cashoutBtn.disabled = false;
+  messageEl.textContent = "Flying... cash out before the crash!";
+
+  let crashPoint = 1.2 + Math.random() * 7;
+
+  timer = setInterval(function() {
+    multiplier += 0.05;
+
+    multiplierEl.textContent = multiplier.toFixed(2) + "x";
+    planeEl.style.transform =
+      "translate(" + (multiplier * 8) + "px, -" +
+      (multiplier * 3) + "px)";
+
+    if (multiplier >= crashPoint) {
+      crash();
+    }
+  }, 100);
+};
+
+cashoutBtn.onclick = function() {
+  if (!running || crashed) return;
+
+  let winnings = bet * multiplier;
+  balance += winnings;
+
+  updateBalance();
+
+  messageEl.textContent =
+    "Cashed out at " + multiplier.toFixed(2) + "x!";
+
+  finishRound();
+};
+
+function crash() {
+  crashed = true;
+  running = false;
+  clearInterval(timer);
+
+  cashoutBtn.disabled = true;
+
+  multiplierEl.textContent =
+    multiplier.toFixed(2) + "x 💥";
+
+  messageEl.textContent =
+    "CRASHED! Your virtual bet was lost.";
+
+  addHistory(multiplier);
+}
+
+function finishRound() {
+  running = false;
+  clearInterval(timer);
+  cashoutBtn.disabled = true;
+
+  addHistory(multiplier);
+}
+
+function addHistory(value) {
+  let old = historyEl.innerHTML;
+
+  if (old === "No rounds yet") old = "";
+
+  historyEl.innerHTML =
+    "<div>" + value.toFixed(2) + "x</div>" + old;
+}
+</script>
+
+</body>
+</html>
